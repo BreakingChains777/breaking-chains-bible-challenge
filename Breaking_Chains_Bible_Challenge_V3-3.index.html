@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Breaking Chains Bible Challenge V3</title>
+<style>
+:root{--bg:#0b0e13;--panel:#151a22;--panel2:#202734;--gold:#e2b94f;--text:#f7f7f7;--muted:#b7bfcb;--green:#35b85a;--red:#d9534f;--blue:#29498b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#1b2432,#090b0f 68%);color:var(--text);font-family:Arial,Helvetica,sans-serif;min-height:100vh}
+header{padding:18px 14px;text-align:center;background:#0d1118;border-bottom:1px solid #303846}h1{margin:0;color:var(--gold);font-size:clamp(25px,6vw,43px)}.sub{margin-top:6px;color:var(--muted)}
+.wrap{max-width:1150px;margin:auto;padding:16px}.screen{display:none}.active{display:block}.card{background:var(--panel);border:1px solid #343d4b;border-radius:14px;padding:20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:16px 0}input{width:100%;padding:13px;border-radius:9px;border:1px solid #465062;background:#0e1218;color:#fff;font:inherit}
+button{font:inherit;border:0;border-radius:10px;padding:12px 15px;cursor:pointer}.primary{background:var(--gold);color:#111;font-weight:800}.secondary{background:var(--panel2);color:#fff;border:1px solid #465062}.correct{background:var(--green);color:#fff}.wrong{background:var(--red);color:#fff}
+.scorebar{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:13px}.score{background:var(--panel);border:1px solid #303846;border-radius:10px;padding:9px;text-align:center}.score strong{display:block;color:var(--gold);font-size:24px;margin-top:4px}
+.turn{text-align:center;color:#d5d9df;margin:8px 0 12px}.board{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}.cat{background:#343d4d;min-height:66px;padding:8px 4px;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:800;font-size:clamp(11px,2.2vw,16px)}.cell{min-height:82px;background:var(--blue);color:#f6d56d;font-size:clamp(19px,4.7vw,31px);font-weight:800}.cell.used{background:#151a21;color:#505967;cursor:not-allowed}
+.question{text-align:center}.qcat{color:var(--gold);font-weight:800}.qtext{font-size:clamp(22px,5vw,36px);line-height:1.25;margin:22px 0}.answer{display:none;background:#242c38;border-radius:10px;padding:15px;font-size:20px;margin:12px 0}.ref{color:#aeb7c4;font-size:14px;margin:8px 0 18px}.actions{display:flex;flex-wrap:wrap;gap:9px;justify-content:center}
+.explain{display:none;text-align:left;background:#1d2530;border-left:4px solid var(--gold);padding:13px;margin:12px 0;border-radius:6px;color:#e3e6ea;line-height:1.45}.notice{color:var(--muted);font-size:14px;text-align:center}.tiny{font-size:12px;color:#87919f;text-align:center;margin-top:15px}.finalbox{max-width:820px;margin:auto;text-align:center}.finalq{font-size:clamp(24px,5vw,38px);line-height:1.3;margin:24px 0}
+@media(max-width:600px){.wrap{padding:10px}.board{gap:4px}.cell{min-height:68px}.cat{min-height:64px}}
+</style>
+</head>
+<body>
+<header><h1>⛓ Breaking Chains Bible Challenge</h1><div class="sub">Bible • Faith • Christian Living • Recovery</div></header>
+<div class="wrap">
+
+<section id="setup" class="screen active"><div class="card">
+<h2>Game Setup</h2>
+<p>A meeting-friendly Bible trivia game with practical Christian and sober-living questions so people can participate even if they don't know many Bible verses yet.</p>
+<div class="grid"><input id="t1" placeholder="Team 1"><input id="t2" placeholder="Team 2"><input id="t3" placeholder="Team 3 (optional)"><input id="t4" placeholder="Team 4 (optional)"></div>
+<button class="primary" onclick="start()">Start Game</button>
+<p class="tiny">Designed for phone testing now and laptop/TV use later.</p>
+</div></section>
+
+<section id="boardScreen" class="screen">
+<div id="scores" class="scorebar"></div><div class="turn">Choose a category and dollar amount.</div><div id="board" class="board"></div>
+<div class="actions" style="margin-top:12px"><button class="secondary" onclick="showFinal()">Final Bible Challenge</button><button class="secondary" onclick="newGame()">New Game</button></div>
+<p class="tiny">After revealing an answer, award the points to the appropriate team.</p>
+</section>
+
+<section id="questionScreen" class="screen"><div class="card question">
+<div class="qcat" id="qcat"></div><div class="qtext" id="qtext"></div><div class="answer" id="answer"></div><div class="ref" id="ref"></div><div class="explain" id="explain"></div>
+<div class="actions"><button id="revealBtn" class="primary" onclick="reveal()">Reveal Answer</button></div>
+<div id="scoreActions" class="actions" style="display:none;margin-top:12px">
+<button class="correct" onclick="award()">✓ Award Points</button><button class="wrong" onclick="finishQuestion()">✗ No Points</button><button class="secondary" onclick="finishQuestion()">Skip</button>
+</div></div></section>
+
+<section id="finalScreen" class="screen"><div class="card finalbox">
+<h2>🏆 Final Bible Challenge</h2><p class="notice">Each team can wager points before the host reveals the answer.</p><div class="finalq" id="finalQ"></div><div class="answer" id="finalA"></div><div class="ref" id="finalR"></div>
+<button id="finalRevealBtn" class="primary" onclick="finalReveal()">Reveal Answer</button><div id="wagers" style="display:none"></div><button id="finishBtn" class="primary" style="display:none;margin-top:12px" onclick="finishGame()">Finish Game</button>
+</div></section>
+
+<section id="resultsScreen" class="screen"><div class="card finalbox"><h2>🏆 Breaking Chains Champion</h2><div id="results"></div><button class="primary" onclick="newGame()">Play Again</button></div></section>
+</div>
+
+<script>
+const cats=["Old Testament","New Testament","Jesus","Bible Basics","Faith & Recovery"];
+const vals=[100,200,300,400,500];
+const qs=[
+["Old Testament",100,"Who built the ark before the flood?","Noah","Genesis 6–9","Noah obeyed God even when what God told him sounded impossible to the people around him."],
+["Old Testament",200,"Who led the Israelites out of Egypt?","Moses","Exodus 3–14","God used Moses to lead people out of bondage and toward freedom."],
+["Old Testament",300,"What was the name of Abraham's son born to Sarah?","Isaac","Genesis 21","Isaac was the son God had promised Abraham and Sarah."],
+["Old Testament",400,"Who defeated Goliath?","David","1 Samuel 17","David trusted God rather than relying on his own size or strength."],
+["Old Testament",500,"Which prophet was swallowed by a great fish?","Jonah","Jonah 1–2","Jonah ran from God's call, but God pursued him and gave him another opportunity."],
+["New Testament",100,"Who was the earthly mother of Jesus?","Mary","Matthew 1; Luke 1–2","Mary willingly trusted God with a difficult calling."],
+["New Testament",200,"Who baptized Jesus?","John the Baptist","Matthew 3:13–17","John's ministry called people to repentance and prepared the way for Jesus."],
+["New Testament",300,"How many apostles did Jesus choose?","Twelve","Mark 3:13–19","Jesus built a community of disciples who would learn from Him and carry His message."],
+["New Testament",400,"Who betrayed Jesus?","Judas Iscariot","Matthew 26:14–16, 47–50","Judas' story is a serious reminder that being around Jesus does not automatically mean surrendering to Him."],
+["New Testament",500,"Who wrote many New Testament letters after his conversion?","Paul","Acts 9; New Testament Epistles","Paul's life is a major biblical example of transformation and a new direction."],
+["Jesus",100,"In what town was Jesus born?","Bethlehem","Matthew 2:1; Luke 2:4–7","Bethlehem was the town connected with the promised Messiah."],
+["Jesus",200,"What was Jesus' first miracle in John's Gospel?","Turning water into wine","John 2:1–11","Jesus' first recorded sign in John's Gospel was at a wedding in Cana."],
+["Jesus",300,"What prayer did Jesus teach His disciples?","The Lord's Prayer","Matthew 6:9–13","Jesus taught His followers to pray to the Father and depend on Him."],
+["Jesus",400,"What did Jesus say is the greatest commandment?","Love the Lord your God with all your heart, soul, and mind.","Matthew 22:37–38","Love for God is followed immediately by love for our neighbor."],
+["Jesus",500,"What happened on the third day after Jesus was crucified?","He rose from the dead.","Matthew 28; Mark 16; Luke 24; John 20","The resurrection is central to Christian faith."],
+["Bible Basics",100,"What is the first book of the Bible?","Genesis","Bible","Genesis begins the Bible's story of creation, humanity, sin, and God's covenant promises."],
+["Bible Basics",200,"What is the last book of the Bible?","Revelation","Bible","Revelation points toward God's ultimate victory and the restoration of creation."],
+["Bible Basics",300,"How many books are in the Protestant Bible?","66","Bible","There are 39 books in the Old Testament and 27 in the New Testament."],
+["Bible Basics",400,"Which book is known for many songs and prayers?","Psalms","Psalms","The Psalms give God's people words for worship, grief, confession, trust, and praise."],
+["Bible Basics",500,"What does the word 'gospel' commonly mean?","Good news","New Testament usage","The gospel is the good news about Jesus Christ."],
+
+["Faith & Recovery",100,"You're having a rough day and feel tempted to isolate yourself. What is generally healthier in recovery?","Reach out to a trustworthy person and talk about what's going on.","Christian community and recovery both recognize the value of honest support.","You don't have to handle every struggle alone."],
+["Faith & Recovery",200,"Someone in recovery is offered a chance to return to an environment strongly connected to their old lifestyle. What's a wise Christian response?","Set a healthy boundary and avoid putting yourself in a dangerous situation.","Proverbs 22:3; 1 Corinthians 15:33","Wisdom sometimes means knowing when to walk away instead of testing yourself."],
+["Faith & Recovery",300,"A person makes a mistake and thinks, 'God is done with me.' Which response best reflects Christian grace?","Confess the mistake, seek forgiveness, learn from it, and keep moving forward.","1 John 1:9; Romans 8:1","Failure does not mean a person should give up on God or recovery."],
+["Faith & Recovery",400,"Why can accountability be helpful in Christian recovery?","It gives us trustworthy people who can encourage us, challenge us, and help us stay honest.","James 5:16; Galatians 6:1–2","Healthy accountability is not about humiliation; it is about truth, support, and growth."],
+["Faith & Recovery",500,"A friend in recovery tells you they are struggling before they relapse. What is a wise first response?","Listen without condemning them, encourage them to seek immediate support, and help them move toward safety.","Galatians 6:1–2; Proverbs 27:17","Taking a struggle seriously early can be much better than waiting until the situation becomes a crisis."],
+["Faith & Recovery",100,"What is one healthy reason Christians gather together regularly?","To encourage and strengthen one another.","Hebrews 10:24–25","Community can remind us that we are not walking alone."],
+["Faith & Recovery",200,"If someone has hurt you, what is a Christian response that still allows healthy boundaries?","Work toward forgiveness while using wise boundaries when needed.","Ephesians 4:31–32; Proverbs 4:23","Forgiveness and healthy boundaries are not opposites."],
+["Faith & Recovery",300,"What does 'sober living' involve beyond simply not using a substance?","Building a healthier life, making wise choices, developing honest relationships, and growing in responsibility.","Christian living emphasizes transformation of the whole life.","Recovery is more than removing a substance; it is learning a new way to live."],
+["Faith & Recovery",400,"A person says, 'I don't need anybody; God and I can handle this alone.' What is one problem with that attitude?","It can reject the healthy support and accountability God often provides through other people.","Ecclesiastes 4:9–10; Galatians 6:2","Faith does not require isolation."],
+["Faith & Recovery",500,"Someone is discouraged because change is happening slowly. Which attitude best fits Christian perseverance?","Keep taking faithful steps, seek help when needed, and trust God with the process.","Galatians 6:9; Philippians 1:6","Growth can take time. Slow progress is still progress."],
+["Faith & Recovery",100,"According to Matthew 11:28, what does Jesus offer those who are weary and burdened?","Rest.","Matthew 11:28","Jesus invites weary people to come to Him."],
+["Faith & Recovery",200,"According to 1 Peter 5:7, what should believers do with their anxieties?","Cast them on God because He cares for them.","1 Peter 5:7","Prayer and trust give believers a way to bring their burdens to God."],
+["Faith & Recovery",300,"According to Proverbs 27:17, what does one person do to another as iron sharpens iron?","A person sharpens his friend.","Proverbs 27:17","Healthy relationships can help us grow rather than simply tell us what we want to hear."],
+["Faith & Recovery",400,"According to James 5:16, what should believers do for one another?","Confess sins to one another and pray for one another.","James 5:16","Honesty, prayer, and community are important parts of Christian life."],
+["Faith & Recovery",500,"According to 2 Corinthians 5:17, what is someone in Christ?","A new creation.","2 Corinthians 5:17","Christian transformation is about becoming new in Christ, not merely changing one behavior."]
+];
+let teams=[],scores=[],used=new Set(),current=null;
+const final={q:"Jesus said the greatest commandments are about two relationships. What are they?",a:"Love God with all your heart, soul, mind, and strength, and love your neighbor as yourself.",r:"Matthew 22:37–39; Mark 12:29–31"};
+function show(id){document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active")}
+function start(){let n=[1,2,3,4].map(i=>document.getElementById("t"+i).value.trim()).filter(Boolean);teams=n.length?n:["Breaking Chains"];scores=teams.map(()=>0);used.clear();show("boardScreen");render()}
+function render(){document.getElementById("scores").innerHTML=teams.map((t,i)=>`<div class="score">${esc(t)}<strong>${scores[i]}</strong></div>`).join("");let h=cats.map(c=>`<div class="cat">${c}</div>`).join("");vals.forEach(v=>cats.forEach(c=>{let exists=qs.some(x=>x[0]===c&&x[1]===v),key=c+"-"+v;h+=exists?`<button class="cell ${used.has(key)?"used":""}" ${used.has(key)?"disabled":`onclick="openQ('${attr(c)}',${v})"`}>${used.has(key)?"—":"$"+v}</button>`:`<div class="cell used">—</div>`}));document.getElementById("board").innerHTML=h}
+function openQ(c,v){current=qs.find(x=>x[0]===c&&x[1]===v);show("questionScreen");document.getElementById("qcat").textContent=c+" • $"+v;document.getElementById("qtext").textContent=current[2];document.getElementById("answer").textContent="Answer: "+current[3];document.getElementById("ref").textContent=current[4];document.getElementById("explain").textContent=current[5];document.getElementById("answer").style.display="none";document.getElementById("explain").style.display="none";document.getElementById("scoreActions").style.display="none";document.getElementById("revealBtn").style.display="inline-block"}
+function reveal(){document.getElementById("answer").style.display="block";document.getElementById("explain").style.display="block";document.getElementById("scoreActions").style.display="flex";document.getElementById("revealBtn").style.display="none"}
+function award(){let s=prompt("Which team gets the points? Enter team number: 1-"+teams.length),i=parseInt(s,10)-1;if(i>=0&&i<teams.length)scores[i]+=current[1];finishQuestion()}
+function finishQuestion(){used.add(current[0]+"-"+current[1]);show("boardScreen");render()}
+function showFinal(){show("finalScreen");document.getElementById("finalQ").textContent=final.q;document.getElementById("finalA").textContent="Answer: "+final.a;document.getElementById("finalR").textContent=final.r}
+function finalReveal(){document.getElementById("finalA").style.display="block";document.getElementById("finalR").style.display="block";document.getElementById("finalRevealBtn").style.display="none";let w=document.getElementById("wagers");w.style.display="block";w.innerHTML=teams.map((t,i)=>`<div style="margin:10px 0;padding:10px;background:#202734;border-radius:9px"><b>${esc(t)}</b><input id="w${i}" type="number" min="0" value="0" placeholder="Wager"><div class="actions" style="margin-top:7px"><button class="correct" onclick="fs(${i},true,this)">Correct</button><button class="wrong" onclick="fs(${i},false,this)">Incorrect</button></div></div>`).join("");document.getElementById("finishBtn").style.display="inline-block"}
+function fs(i,ok,b){let w=Math.max(0,parseInt(document.getElementById("w"+i).value,10)||0);scores[i]+=ok?w:-w;b.disabled=true}
+function finishGame(){let o=teams.map((t,i)=>({t,s:scores[i]})).sort((a,b)=>b.s-a.s);document.getElementById("results").innerHTML=o.map((x,i)=>`<p style="font-size:20px"><b>${i+1}. ${esc(x.t)}</b> — ${x.s} points</p>`).join("");show("resultsScreen")}
+function newGame(){show("setup")}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function attr(s){return String(s).replace(/'/g,"\\'")}
+</script>
+</body>
+</html>
